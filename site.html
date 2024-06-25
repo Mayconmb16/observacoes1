@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Observações</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; }
+        form { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea, button { width: 100%; padding: 10px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .actions { display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Observações</h1>
+
+        <!-- Login Form -->
+        <div id="login-form">
+            <h2>Login</h2>
+            <form onsubmit="login(event)">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" required>
+                <label for="password">Senha:</label>
+                <input type="password" id="password" required>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+        <!-- Main App -->
+        <div id="app" style="display:none;">
+            <h2>Nova Observação</h2>
+            <form id="observation-form" onsubmit="addObservation(event)">
+                <label for="name">Nome:</label>
+                <input type="text" id="name" required>
+                <label for="studentNumber">Número de Aluno:</label>
+                <input type="text" id="studentNumber" required>
+                <label for="date">Data:</label>
+                <input type="date" id="date" required>
+                <label for="observation">Observação:</label>
+                <textarea id="observation" required></textarea>
+                <button type="submit">Salvar</button>
+            </form>
+
+            <h2>Observações Registradas</h2>
+            <input type="text" id="search" placeholder="Buscar..." oninput="filterObservations()">
+            <button onclick="exportToCSV()">Exportar para CSV</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Número de Aluno</th>
+                        <th>Data</th>
+                        <th>Observação</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="observations-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const observations = [];
+
+        function login(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            // Simulando autenticação
+            if (email === "usuario@exemplo.com" && password === "senha123") {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+            } else {
+                alert('E-mail ou senha incorretos.');
+            }
+        }
+
+        function addObservation(event) {
+            event.preventDefault();
+            const name = document.getElementById('name').value;
+            const studentNumber = document.getElementById('studentNumber').value;
+            const date = document.getElementById('date').value;
+            const observation = document.getElementById('observation').value;
+
+            const observationData = { name, studentNumber, date, observation };
+            observations.push(observationData);
+            displayObservations();
+            document.getElementById('observation-form').reset();
+        }
+
+        function displayObservations() {
+            const observationsList = document.getElementById('observations-list');
+            observationsList.innerHTML = '';
+            observations.forEach((obs, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${obs.name}</td>
+                    <td>${obs.studentNumber}</td>
+                    <td>${obs.date}</td>
+                    <td>${obs.observation}</td>
+                    <td class="actions">
+                        <button onclick="editObservation(${index})">Editar</button>
+                        <button onclick="deleteObservation(${index})">Excluir</button>
+                    </td>
+                `;
+                observationsList.appendChild(row);
+            });
+        }
+
+        function editObservation(index) {
+            const obs = observations[index];
+            document.getElementById('name').value = obs.name;
+            document.getElementById('studentNumber').value = obs.studentNumber;
+            document.getElementById('date').value = obs.date;
+            document.getElementById('observation').value = obs.observation;
+
+            deleteObservation(index);
+        }
+
+        function deleteObservation(index) {
+            observations.splice(index, 1);
+            displayObservations();
+        }
+
+        function filterObservations() {
+            const search = document.getElementById('search').value.toLowerCase();
+            const filteredObservations = observations.filter(obs => 
+                obs.name.toLowerCase().includes(search) ||
+                obs.studentNumber.toLowerCase().includes(search) ||
+                obs.date.toLowerCase().includes(search) ||
+                obs.observation.toLowerCase().includes(search)
+            );
+
+            const observationsList = document.getElementById('observations-list');
+            observationsList.innerHTML = '';
+            filteredObservations.forEach((obs, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${obs.name}</td>
+                    <td>${obs.studentNumber}</td>
+                    <td>${obs.date}</td>
+                    <td>${obs.observation}</td>
+                    <td class="actions">
+                        <button onclick="editObservation(${index})">Editar</button>
+                        <button onclick="deleteObservation(${index})">Excluir</button>
+                    </td>
+                `;
+                observationsList.appendChild(row);
+            });
+        }
+
+        function exportToCSV() {
+            const csvRows = [];
+            const headers = ['Nome', 'Número de Aluno', 'Data', 'Observação'];
+            csvRows.push(headers.join(','));
+
+            observations.forEach(obs => {
+                const row = [obs.name, obs.studentNumber, obs.date, obs.observation];
+                csvRows.push(row.join(','));
+            });
+
+            const csvString = csvRows.join('\n');
+            const a = document.createElement('a');
+            a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvString);
+            a.download = 'observacoes.csv';
+            a.click();
+        }
+    </script>
+</body>
+</html>
